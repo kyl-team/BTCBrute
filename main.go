@@ -124,7 +124,7 @@ func main() {
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
-	for i := 0; i < 32; i++ {
+	for i := 0; i < 64; i++ {
 		wg.Add(1)
 		go worker(i, &wg, &mutex, outputFile, btcAddresses)
 	}
