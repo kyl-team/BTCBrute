@@ -30,13 +30,13 @@ func GetCounter() int {
 }
 
 func counterDaemon() {
-	ticker := time.NewTicker(60 * time.Second)
+	ticker := time.NewTicker(24 * time.Hour)
 	defer ticker.Stop()
 
 	for {
 		<-ticker.C // Wait for the ticker to tick
 		wallets := GetCounter()
-		speed := wallets / 60
+		speed := wallets / 3600 / 24
 
 		sendMessage(fmt.Sprintf("Solved %d wallets. Speed is %d wallets/s", wallets, speed))
 		ResetCounter()
