@@ -6,7 +6,7 @@ COPY go.mod go.sum ./
 
 RUN go mod download
 
-COPY ./main.go .
+COPY ./btc.go ./config.go ./counter.go ./main.go ./telegram.go ./
 
 RUN go build -o bruter .
 
