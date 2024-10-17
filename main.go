@@ -13,7 +13,7 @@ func worker(id int, wg *sync.WaitGroup, mutex *sync.Mutex, outputFile string, bt
 
 	for {
 		privateKey, publicAddress, err := generateKeyAndAddress()
-		IncrementCounter()
+		counter.Add(1)
 		if err != nil {
 			log.Printf("Worker %d: Failed to generate key and address: %s", id, err)
 			continue

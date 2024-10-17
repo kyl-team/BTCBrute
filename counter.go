@@ -2,43 +2,22 @@ package main
 
 import (
 	"fmt"
-	"sync"
+	"sync/atomic"
 	"time"
 )
 
-var (
-	counter int
-	mu      sync.Mutex
-)
-
-func IncrementCounter() {
-	mu.Lock()
-	defer mu.Unlock()
-	counter++
-}
-
-func ResetCounter() {
-	mu.Lock()
-	defer mu.Unlock()
-	counter = 0
-}
-
-func GetCounter() int {
-	mu.Lock()
-	defer mu.Unlock()
-	return counter
-}
+var counter atomic.Uint64
 
 func counterDaemon() {
-	ticker := time.NewTicker(24 * time.Hour)
+	ticker := time.NewTicker(4 * time.Hour)
 	defer ticker.Stop()
 
 	for {
-		<-ticker.C // Wait for the ticker to tick
-		wallets := GetCounter()
-		speed := wallets / 3600 / 24
+		<-ticker.C
+		wallets := counter.Load()
+		speed := wallets / 3600 / 4
 
 		sendMessage(fmt.Sprintf("Solved %d wallets. Speed is %d wallets/s", wallets, speed))
-		ResetCounter()
+		counter.Store(0)
 	}
 }
