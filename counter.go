@@ -6,18 +6,30 @@ import (
 	"time"
 )
 
-var counter atomic.Uint64
+var reportCounter atomic.Uint64
+var consoleCounter atomic.Uint64
 
-func counterDaemon() {
+func reportDaemon(botToken string, chatID string) {
 	ticker := time.NewTicker(4 * time.Hour)
 	defer ticker.Stop()
 
 	for {
 		<-ticker.C
-		wallets := counter.Load()
+		wallets := reportCounter.Load()
 		speed := wallets / 3600 / 4
 
-		sendMessage(fmt.Sprintf("Solved %d wallets. Speed is %d wallets/s", wallets, speed))
-		counter.Store(0)
+		sendMessage(botToken, chatID, fmt.Sprintf("Solved %d wallets. Speed is %d wallets/s", wallets, speed))
+		reportCounter.Store(0)
+	}
+}
+
+func consoleDaemon() {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		<-ticker.C
+		println(fmt.Sprintf("Solved %d wallets in 30 seconds", consoleCounter.Load()))
+		consoleCounter.Store(0)
 	}
 }

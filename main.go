@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -8,12 +9,13 @@ import (
 	"time"
 )
 
-func worker(id int, wg *sync.WaitGroup, mutex *sync.Mutex, outputFile string, btcAddresses map[string]bool) {
+func worker(token string, chatID string, id int, wg *sync.WaitGroup, mutex *sync.Mutex, outputFile string, btcAddresses map[string]bool) {
 	defer wg.Done()
 
 	for {
 		privateKey, publicAddress, err := generateKeyAndAddress()
-		counter.Add(1)
+		consoleCounter.Add(1)
+		reportCounter.Add(1)
 		if err != nil {
 			log.Printf("Worker %d: Failed to generate key and address: %s", id, err)
 			continue
@@ -31,14 +33,13 @@ func worker(id int, wg *sync.WaitGroup, mutex *sync.Mutex, outputFile string, bt
 			}
 
 			logString := fmt.Sprintf("%s:%s\n", privateKey, publicAddress)
-			sendMessage(fmt.Sprintf("Found new wallet: %s", logString))
+			sendMessage(token, chatID, fmt.Sprintf("Found new wallet: %s", logString))
 
 			if _, err := file.WriteString(logString); err != nil {
 				log.Printf("Worker %d: Failed to write to file: %s", id, err)
 			}
 			file.Close()
 			mutex.Unlock()
-
 		}
 	}
 }
@@ -47,7 +48,14 @@ func main() {
 	outputFile := "data/output.txt"
 	btcAddressesFile := "data/btc.txt"
 
-	sendMessage("Loading address database")
+	var threads int
+	var token, chatID string
+	flag.IntVar(&threads, "threads", 1, "Threads to run")
+	flag.StringVar(&token, "token", "", "Telegram bot token")
+	flag.StringVar(&chatID, "chatID", "", "Telegram chat ID")
+	flag.Parse()
+
+	sendMessage(token, chatID, "Loading address database")
 
 	startTime := time.Now()
 
@@ -56,16 +64,17 @@ func main() {
 		log.Fatalf("Failed to read BTC addresses: %s", err)
 	}
 
-	sendMessage(fmt.Sprintf("Database has loaded in %.1fs", time.Since(startTime).Seconds()))
+	sendMessage(token, chatID, fmt.Sprintf("Database loading took %.1fs. Loaded %d known wallets", time.Since(startTime).Seconds(), len(btcAddresses)))
 
-	go counterDaemon()
+	go reportDaemon(token, chatID)
+	go consoleDaemon()
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
 	for i := 0; i < threads; i++ {
 		wg.Add(1)
-		go worker(i, &wg, &mutex, outputFile, btcAddresses)
+		go worker(token, chatID, i, &wg, &mutex, outputFile, btcAddresses)
 	}
 
 	wg.Wait()
