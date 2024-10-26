@@ -24,7 +24,7 @@ func reportDaemon(botToken string, chatID string) {
 }
 
 func consoleDaemon() {
-	ticker := time.NewTicker(30 * time.Second)
+	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
 
 	for {

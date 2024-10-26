@@ -1,10 +1,10 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -48,14 +48,11 @@ func main() {
 	outputFile := "data/output.txt"
 	btcAddressesFile := "data/btc.txt"
 
-	var threads int
-	var token, chatID string
-	flag.IntVar(&threads, "threads", 1, "Threads to run")
-	flag.StringVar(&token, "token", "", "Telegram bot token")
-	flag.StringVar(&chatID, "chatID", "", "Telegram chat ID")
-	flag.Parse()
+	threads, err := strconv.Atoi(os.Getenv("threads"))
+	token := os.Getenv("token")
+	chatID := os.Getenv("chatID")
 
-	sendMessage(token, chatID, "Loading address database")
+	sendMessage(token, chatID, fmt.Sprintf("Loading address database, threads: %d", threads))
 
 	startTime := time.Now()
 
